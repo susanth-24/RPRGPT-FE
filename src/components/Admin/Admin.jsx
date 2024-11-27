@@ -17,7 +17,7 @@ const Admin = () => {
   const addPdfApi = async (formData) => {
     try {
       await axios
-        .post("http://localhost:5000/api/create", formData)
+        .post("http://18.205.22.41/api/create", formData)
         .then((res) => {
           console.log(res);
           alert("PDF added successfully!");
