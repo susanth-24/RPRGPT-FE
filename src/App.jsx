@@ -5,6 +5,9 @@ import StartPage from './components/StartPage/StartPage'
 // import NotFound from './components/NotFound/NotFound'
 import Auth from './components/Auth/Auth'
 import DashboardAdmin from './Layouts/DashboardAdmin'
+import CreateAgent from './components/Signup/CreateAgent'
+import DashboardUser from './Layouts/DashboardUser'
+import NotAllow from './components/NotAllow/NotAllow'
 // import Navbar from './components/Navbar/Navbar'
 // import Dashboard from './Layouts/Dashboard/Dashboard'
 // import NotAllow from './components/NotAllow/NotAllow'
@@ -27,7 +30,11 @@ function App() {
       <Routes>
         <Route path="/" element={<StartPage />} />
         <Route path="/auth/signin"  Component={() => !user ? <Auth /> : <Navigate to="/" />} />
+        <Route path="/auth/signup"  Component={() => !user ? <CreateAgent/> : <Navigate to="/" />} />
         <Route path="/admin/*" Component={()=>user?.result?.post==='Admin'?<DashboardAdmin/>:<Navigate to="/denied"/>} />
+        <Route path="/user/*" Component={()=>user?.result?.post==='User'?<DashboardUser/>:<Navigate to="/denied"/>} />
+        <Route path="/denied" element={<NotAllow/>}/>
+
         {/* <Route path="/docs" element={<Docs />} />
         <Route path="/auth/signin"  Component={() => !user ? <Auth /> : <Navigate to="/" />} />
         <Route path="*" element={<NotFound />} />

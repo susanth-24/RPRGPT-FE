@@ -1,92 +1,3 @@
-// import React, { useState, useRef, useEffect } from 'react';
-
-// const Chat = () => {
-//   const [messages, setMessages] = useState([]); // Manage chat messages
-//   const [input, setInput] = useState(''); // Track user input
-//   const chatContainerRef = useRef(null); // Reference for scrolling
-
-//   // Function to handle sending messages
-//   const sendMessage = async () => {
-//     if (input.trim() === '') return;
-
-//     const userMessage = { sender: 'user', text: input };
-//     setMessages((prev) => [...prev, userMessage]); // Add user message
-
-//     // try {
-//     //   const response = await fetch('https://api.groq-llama3-8b.com/chat', {
-//     //     method: 'POST',
-//     //     headers: {
-//     //       'Content-Type': 'application/json',
-//     //     },
-//     //     body: JSON.stringify({ message: input }),
-//     //   });
-
-//     //   const data = await response.json();
-//     //   const botMessage = { sender: 'bot', text: data.response }; // Assume API returns 'response'
-//     //   setMessages((prev) => [...prev, botMessage]); // Add bot response
-//     // } catch (error) {
-//     //   console.error('Error:', error);
-//     //   const errorMessage = { sender: 'bot', text: 'Error fetching response. Please try again!' };
-//     //   setMessages((prev) => [...prev, errorMessage]);
-//     // }
-//     try {
-//         // Simulate API response by echoing the user's input
-//         const botMessage = { sender: 'bot', text: input }; // Bot echoes the user input
-//         setMessages((prev) => [...prev, botMessage]); // Add bot response
-//       } catch (error) {
-//         console.error('Error:', error);
-//         const errorMessage = { sender: 'bot', text: 'Error fetching response. Please try again!' };
-//         setMessages((prev) => [...prev, errorMessage]);
-//       }
-      
-
-//     setInput(''); // Clear input field
-//   };
-
-//   // Scroll to the latest message when messages update
-//   useEffect(() => {
-//     if (chatContainerRef.current) {
-//       chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
-//     }
-//   }, [messages]);
-
-//   return (
-//     <div className="flex flex-col h-screen bg-gray-100">
-//       <div className="flex-1 overflow-y-auto p-4" ref={chatContainerRef}>
-//         {messages.map((message, index) => (
-//           <div
-//             key={index}
-//             className={`my-2 p-3 rounded-lg max-w-xs ${
-//               message.sender === 'user'
-//                 ? 'bg-blue-500 text-white self-end ml-auto'
-//                 : 'bg-green-500 text-white self-start mr-auto'
-//             }`}
-//           >
-//             {message.text}
-//           </div>
-//         ))}
-//       </div>
-//       <div className="flex items-center p-4 bg-white border-t border-gray-300">
-//         <input
-//           type="text"
-//           value={input}
-//           onChange={(e) => setInput(e.target.value)}
-//           placeholder="Type your message..."
-//           className="flex-1 p-2 border rounded-lg border-gray-300 focus:outline-none focus:ring focus:ring-blue-300"
-//         />
-//         <button
-//           onClick={sendMessage}
-//           className="ml-3 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
-//         >
-//           Send
-//         </button>
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default Chat;
-
 import React, { useState, useRef, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown'; // For rendering Markdown
 import remarkMath from 'remark-math'; // For parsing LaTeX math
@@ -96,15 +7,36 @@ import 'katex/dist/katex.min.css'; // KaTeX styles
 const Chat = () => {
   const [messages, setMessages] = useState([]); // Stores messages
   const [input, setInput] = useState(''); // Tracks user input
+  const [selectedCategory, setSelectedCategory] = useState(''); // Tracks selected category
+  const [error, setError] = useState(''); // For displaying error if no category is selected
   const chatContainerRef = useRef(null); // Reference for scrolling
+
+  // Dummy user data (you can replace this with actual data from your app)
+  const user = JSON.parse(localStorage.getItem('profile'));
+  // console.log(user)
 
   // Function to handle sending messages
   const sendMessage = async () => {
+    if (!selectedCategory) {
+      setError('Please select a category before sending the message.');
+      return; // Don't send the message if no category is selected
+    }
+
     if (!input.trim()) return; // Prevent sending empty messages
 
     // Add user's message to the chat
     const userMessage = { sender: 'user', text: input };
     setMessages((prev) => [...prev, userMessage]);
+    setError(''); // Reset the error if the message is being sent
+
+    let categoryToSend = selectedCategory;
+
+    // Check if "Academics" is selected and modify the category value
+    if (selectedCategory === 'Academics') {
+      categoryToSend = `${user?.result?.grad}${user?.result?.year}`; // Custom value for Academics
+    }else if (selectedCategory === 'Faculty' || selectedCategory === 'Clubs') {
+      categoryToSend = selectedCategory.toLowerCase(); // Convert "Faculty" and "Clubs" to lowercase
+    }
 
     try {
       // Make the POST request to the API
@@ -114,8 +46,10 @@ const Chat = () => {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
         },
-        body: JSON.stringify({ query: input }),
+        body: JSON.stringify({ query: input, pursuing: categoryToSend }), // Send only the selected category
       });
+      console.log(input)
+      console.log(categoryToSend)
 
       // Parse the response
       if (!response.ok) {
@@ -154,24 +88,46 @@ const Chat = () => {
     }
   };
 
+  // Set selected category (only one category at a time)
+  const handleCategoryChange = (categoryName) => {
+    setSelectedCategory(categoryName); // Set the selected category
+  };
+
   return (
     <div className="flex flex-col h-screen bg-gray-50">
       {/* Header */}
-      <div className="flex items-center justify-center h-16 bg-blue-600 text-white font-bold text-lg">
-        RPR GPT
+      
+      {/* Category Buttons */}
+      <div className="p-4 bg-gray-100 border-b border-gray-300">
+        <div className="flex space-x-6">
+          <button
+            onClick={() => handleCategoryChange('Academics')}
+            className={`px-4 py-2 rounded-md ${selectedCategory === 'Academics' ? 'bg-blue-500 text-white' : 'bg-gray-300 text-black'} hover:bg-blue-600 focus:outline-none`}
+          >
+            Academics
+          </button>
+          <button
+            onClick={() => handleCategoryChange('Faculty')}
+            className={`px-4 py-2 rounded-md ${selectedCategory === 'Faculty' ? 'bg-blue-500 text-white' : 'bg-gray-300 text-black'} hover:bg-blue-600 focus:outline-none`}
+          >
+            Faculty
+          </button>
+          <button
+            onClick={() => handleCategoryChange('Clubs')}
+            className={`px-4 py-2 rounded-md ${selectedCategory === 'Clubs' ? 'bg-blue-500 text-white' : 'bg-gray-300 text-black'} hover:bg-blue-600 focus:outline-none`}
+          >
+            Clubs
+          </button>
+        </div>
+        {error && <p className="text-red-500 mt-2">{error}</p>} {/* Display error if no category selected */}
       </div>
 
       {/* Chat Area */}
-      <div
-        ref={chatContainerRef}
-        className="flex-1 overflow-y-auto p-4 space-y-4"
-      >
+      <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.map((message, index) => (
           <div
             key={index}
-            className={`flex ${
-              message.sender === 'user' ? 'justify-end' : 'justify-start'
-            }`}
+            className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
           >
             <div
               className={`max-w-md p-3 rounded-lg shadow ${
@@ -216,54 +172,3 @@ const Chat = () => {
 };
 
 export default Chat;
-
-
-
-// import React from 'react';
-
-// const Chat = () => {
-//   return (
-//     <div className="h-screen bg-gray-900 text-white flex flex-col">
-//       {/* Top Navbar */}
-//       <div className="bg-gray-800 py-2 px-4 flex items-center justify-between shadow">
-//         <h1 className="text-lg font-semibold">Using (GPT-3.5-TURBO)</h1>
-//         <button className="bg-gray-700 px-3 py-1 rounded hover:bg-gray-600">
-//           <span className="text-sm font-medium">🔍</span>
-//         </button>
-//       </div>
-
-//       {/* Chat Area */}
-//       <div className="flex-grow overflow-y-auto p-4">
-//         {/* User Message */}
-//         <div className="flex items-start mb-4">
-//           <div className="bg-gray-700 p-3 rounded shadow">
-//             <p className="text-sm">hi</p>
-//           </div>
-//         </div>
-
-//         {/* Assistant Response */}
-//         <div className="flex items-start mb-4">
-//           <div className="bg-green-700 p-3 rounded shadow">
-//             <p className="text-sm">
-//               Hello! How can I assist you today?
-//             </p>
-//           </div>
-//         </div>
-//       </div>
-
-//       {/* Input Box */}
-//       <div className="bg-gray-800 p-4 flex items-center">
-//         <input
-//           type="text"
-//           className="flex-grow bg-gray-700 text-white px-4 py-2 rounded-lg focus:outline-none"
-//           placeholder="Send a message..."
-//         />
-//         <button className="bg-green-600 text-white px-4 py-2 ml-2 rounded-lg hover:bg-green-500">
-//           ➤
-//         </button>
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default Chat;

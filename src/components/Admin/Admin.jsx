@@ -1,45 +1,73 @@
-import React, { useState } from "react";
 import axios from "axios";
+import { useState } from "react";
 
 const Admin = () => {
-    const [file, setFile] = useState(null);
-    const [message, setMessage] = useState("");
+  const [pdf, setPdf] = useState(null);
+  const [fileName, setFileName] = useState("");
 
-    // Handle file selection
-    const handleFileChange = (event) => {
-        setFile(event.target.files[0]); // Get the selected file
-    };
+  const submitPdf = (e) => {
+    e.preventDefault();
+    const formData = new FormData();
+    formData.append("pdf", pdf);
+    formData.append("fileName", fileName); // Add the custom file name
 
-    // Handle file upload
-    const handleUpload = async () => {
-        if (!file) {
-            setMessage("Please select a file to upload.");
-            return;
-        }
+    addPdfApi(formData);
+  };
 
-        const formData = new FormData();
-        formData.append("file", file); // Append the file to the form data
+  const addPdfApi = async (formData) => {
+    try {
+      await axios
+        .post("http://localhost:5000/api/create", formData)
+        .then((res) => {
+          console.log(res);
+          alert("PDF added successfully!");
+        })
+        .catch((err) => {
+          console.log(err);
+        });
+    } catch (err) {
+      console.log(err);
+    }
+  };
 
-        try {
-            const response = await axios.post("http://localhost:5000/upload", formData, {
-                headers: {
-                    "Content-Type": "multipart/form-data", // Required for file uploads
-                },
-            });
-            setMessage("File uploaded successfully! URL: " + response.data.fileUrl);
-        } catch (error) {
-            setMessage("Error uploading file: " + error.message);
-        }
-    };
-
-    return (
+  return (
+    <div className="max-w-lg mx-auto mt-10 p-6 border rounded-lg shadow-md bg-white">
+      <div className="text-xl font-semibold mb-4 text-center">Upload PDF with Custom File Name</div>
+      <form onSubmit={(e) => submitPdf(e)} className="space-y-4">
         <div>
-            <h1>Upload PDF</h1>
-            <input type="file" accept="application/pdf" onChange={handleFileChange} />
-            <button onClick={handleUpload}>Upload</button>
-            <p>{message}</p>
+          <label htmlFor="pdf" className="block text-sm font-medium text-gray-700">Choose PDF file</label>
+          <input
+            id="pdf"
+            type="file"
+            onChange={(e) => setPdf(e.target.files[0])}
+            accept=".pdf"
+            className="mt-1 block w-full text-sm text-gray-700 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          />
         </div>
-    );
+
+        <div>
+          <label htmlFor="fileName" className="block text-sm font-medium text-gray-700">Enter Custom File Name</label>
+          <input
+            id="fileName"
+            type="text"
+            placeholder="Enter custom file name"
+            value={fileName}
+            onChange={(e) => setFileName(e.target.value)}
+            className="mt-1 block w-full text-sm text-gray-700 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          />
+        </div>
+
+        <div>
+          <button
+            type="submit"
+            className="w-full py-2 px-4 bg-indigo-600 text-white font-semibold rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          >
+            Upload PDF
+          </button>
+        </div>
+      </form>
+    </div>
+  );
 };
 
 export default Admin;

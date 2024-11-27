@@ -16,27 +16,20 @@ import { MdAdminPanelSettings } from "react-icons/md";
 import Admin from './components/Admin/Admin';
 
 
-const routes = [
+const routesuser = [
     {
         name: "chat",
-        layout: "/admin",
+        layout: "/user",
         path: "chat",
         icon: <IoMdChatboxes  className="h-6 w-6"/>,
         component: <Chat />,
     },
     {
         name: "profile",
-        layout: "/admin",
+        layout: "/user",
         path: "profile",
         icon: <MdPerson className="h-6 w-6" />,
         component: <Profile />,
-    },
-    {
-        name: "admin",
-        layout: "/admin",
-        path: "admin",
-        icon: <MdAdminPanelSettings  className="h-6 w-6" />,
-        component: <Admin />,
-    },
+    }
 ];
-export default routes;
+export default routesuser;
